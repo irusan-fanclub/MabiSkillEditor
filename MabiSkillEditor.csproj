@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>MabiSkillEditor</AssemblyName>
+    <RootNamespace>MabiSkillEditor</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="sources.json"    CopyToOutputDirectory="PreserveNewest"/>
+    <Content Include="mabi-pack2.exe"  CopyToOutputDirectory="PreserveNewest"/>
+  </ItemGroup>
+
+</Project>

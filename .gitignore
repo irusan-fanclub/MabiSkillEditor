@@ -1,0 +1,19 @@
+# Build output
+bin/
+obj/
+
+# Runtime generated files
+origin/
+output/
+config.json
+
+# Binary tools (不納入版控)
+mabi-pack2.exe
+
+# VS / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates

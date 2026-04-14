@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MabiSkillEditor", "MabiSkillEditor.csproj", "{BE83CE0A-B7CF-01CB-8C4C-2F4349CD877D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BE83CE0A-B7CF-01CB-8C4C-2F4349CD877D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE83CE0A-B7CF-01CB-8C4C-2F4349CD877D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE83CE0A-B7CF-01CB-8C4C-2F4349CD877D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE83CE0A-B7CF-01CB-8C4C-2F4349CD877D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C5E9FD47-7306-40C8-A733-5FAD391DF1CA}
+	EndGlobalSection
+EndGlobal
