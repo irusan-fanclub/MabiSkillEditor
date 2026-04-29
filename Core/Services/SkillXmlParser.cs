@@ -56,14 +56,14 @@ public class SkillXmlParser
             candidates.Add((id, i, season, attrs));
         }
 
-        // ── 第二階段：每個 SkillID 只保留 Season 最大的那列 ──
+        // ── 第二階段：每個 SkillID 只保留檔案中最後出現的那列 ──
         var allTalentKeys = new HashSet<string>();
         var skills = new List<SkillEntry>();
 
         foreach (var group in candidates.GroupBy(c => c.Id))
         {
             var rowCount = group.Count();
-            var best     = group.OrderByDescending(c => c.Season).First();
+            var best     = group.OrderByDescending(c => c.LineIdx).First();
             var attrs    = best.Attrs;
 
             var raceVal = attrs.TryGetValue("AvailableRace", out var rs)
