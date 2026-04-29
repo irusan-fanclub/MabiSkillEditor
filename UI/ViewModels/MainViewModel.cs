@@ -141,7 +141,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     // ── 輸出 ─────────────────────────────────────────
 
-    public async Task ExportAsync(IProgress<string> progress)
+    public async Task<string> ExportAsync(IProgress<string> progress)
     {
         if (!IsLoaded) throw new InvalidOperationException("尚未載入技能資料");
         if (Session.AllEdits.Count == 0) throw new InvalidOperationException("沒有任何修改");
@@ -179,6 +179,7 @@ public class MainViewModel : INotifyPropertyChanged
         });
 
         Status = $"輸出完成！共 {diffs.Count} 個技能修改 → {itOut}";
+        return itOut;
     }
 
     // ── 編輯表單操作 ──────────────────────────────────

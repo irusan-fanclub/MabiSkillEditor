@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using MabiSkillEditor.Core.Models;
 using MabiSkillEditor.UI.ViewModels;
 using WinMsgBox = System.Windows.MessageBox;
@@ -113,14 +116,16 @@ public partial class MainWindow : Window
             _vm.Status       = msg;
         });
         ShowOverlay("正在輸出...");
+        string? itPath = null;
         try
         {
-            await _vm.ExportAsync(progress);
-            WinMsgBox.Show(_vm.Status, "輸出完成", MessageBoxButton.OK, MessageBoxImage.Information);
+            itPath = await _vm.ExportAsync(progress);
         }
         catch (Exception ex)
         { WinMsgBox.Show(ex.Message, "輸出失敗", MessageBoxButton.OK, MessageBoxImage.Error); }
         finally { HideOverlay(); }
+
+        if (itPath != null) ShowResultOverlay(_vm.Status, itPath);
     }
 
     private void BtnLoadDiff_Click(object sender, RoutedEventArgs e)
@@ -160,6 +165,96 @@ public partial class MainWindow : Window
         BtnLoad.IsEnabled      = enabled;
         BtnExport.IsEnabled    = enabled;
         BtnLoadDiff.IsEnabled  = enabled;
+    }
+
+    // ── 結果 Overlay ─────────────────────────────────
+
+    private void ShowResultOverlay(string message, string path)
+    {
+        ResultMessage.Text       = message;
+        ResultPath.Text          = path;
+        ResultCopyStatus.Text    = "";
+        ResultOverlay.Visibility = Visibility.Visible;
+    }
+
+    private void ResultOverlay_Backdrop_Click(object sender, MouseButtonEventArgs e)
+        => ResultOverlay.Visibility = Visibility.Collapsed;
+
+    private void ResultOverlay_Inner_Click(object sender, MouseButtonEventArgs e)
+        => e.Handled = true;
+
+    private void BtnCopyPath_Click(object sender, RoutedEventArgs e)
+    {
+        try { System.Windows.Clipboard.SetText(ResultPath.Text); }
+        catch { /* clipboard 可能被其他程式佔用，忽略 */ }
+    }
+
+    private void BtnCopyToPackage_Click(object sender, RoutedEventArgs e)
+    {
+        var src = ResultPath.Text;
+        if (string.IsNullOrEmpty(src) || !File.Exists(src))
+        {
+            ResultCopyStatus.Foreground =
+                new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(0xf3, 0x8b, 0xa8));
+            ResultCopyStatus.Text = "找不到輸出檔案";
+            return;
+        }
+
+        var gameFolder = _vm.GameFolder;
+        if (string.IsNullOrWhiteSpace(gameFolder))
+        {
+            ResultCopyStatus.Foreground =
+                new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(0xf3, 0x8b, 0xa8));
+            ResultCopyStatus.Text = "尚未設定遊戲資料夾";
+            return;
+        }
+
+        var packageDir = Path.Combine(gameFolder, "package");
+        if (!Directory.Exists(packageDir))
+        {
+            ResultCopyStatus.Foreground =
+                new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(0xf3, 0x8b, 0xa8));
+            ResultCopyStatus.Text = $"找不到 package 資料夾：{packageDir}";
+            return;
+        }
+
+        try
+        {
+            var dest = Path.Combine(packageDir, Path.GetFileName(src));
+            File.Copy(src, dest, overwrite: true);
+            ResultCopyStatus.Foreground =
+                new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(0xa6, 0xe3, 0xa1));
+            ResultCopyStatus.Text = $"已複製至 {dest}";
+        }
+        catch (Exception ex)
+        {
+            ResultCopyStatus.Foreground =
+                new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(0xf3, 0x8b, 0xa8));
+            ResultCopyStatus.Text = $"複製失敗：{ex.Message}";
+        }
+    }
+
+    private void BtnOpenFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var path = ResultPath.Text;
+        if (string.IsNullOrEmpty(path)) return;
+        try
+        {
+            if (File.Exists(path))
+                Process.Start("explorer.exe", $"/select,\"{path}\"");
+            else
+            {
+                var dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                    Process.Start("explorer.exe", $"\"{dir}\"");
+            }
+        }
+        catch { /* explorer 啟動失敗時保持靜默 */ }
     }
 
     // ── 搜尋 ─────────────────────────────────────────
