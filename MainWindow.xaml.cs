@@ -312,19 +312,21 @@ public partial class MainWindow : Window
         if (_vm.CurrentEdit == null) return;
         _vm.CurrentEdit.WeaponStringID   = BuildWeaponString();
         _vm.CurrentEdit.TargetPreference = ETarget.Text;
-        _vm.CurrentEdit.SkillType        = ESkillType.Text;
-        _vm.CurrentEdit.TriggerType      = ETriggerType.Text;
-        _vm.CurrentEdit.SkillCategory    = ESkillCategory.Text;
+        // 進階分類欄位（暫時停用）
+        // _vm.CurrentEdit.SkillType        = ESkillType.Text;
+        // _vm.CurrentEdit.TriggerType      = ETriggerType.Text;
+        // _vm.CurrentEdit.SkillCategory    = ESkillCategory.Text;
         // IsHidden 不從 UI 讀取，保留原始值
         _vm.CommitCurrentEdit();
     }
 
-    private void EAdvancedToggle_Changed(object sender, RoutedEventArgs e)
-    {
-        var open = EAdvancedToggle.IsChecked == true;
-        EAdvancedPanel.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-        EAdvancedToggle.Content   = (open ? "▾" : "▸") + " 進階：分類欄位";
-    }
+    // 進階分類欄位 toggle handler（暫時停用）
+    // private void EAdvancedToggle_Changed(object sender, RoutedEventArgs e)
+    // {
+    //     var open = EAdvancedToggle.IsChecked == true;
+    //     EAdvancedPanel.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+    //     EAdvancedToggle.Content   = (open ? "▾" : "▸") + " 進階：分類欄位";
+    // }
 
     private void BtnRevert_Click(object sender, RoutedEventArgs e)
         => _vm.RevertCurrentEdit();
@@ -463,9 +465,10 @@ public partial class MainWindow : Window
         {
             ETitle.Text = "選擇技能後在此編輯";
             ETarget.Text = "";
-            ESkillType.Text     = "";
-            ETriggerType.Text   = "";
-            ESkillCategory.Text = "";
+            // 進階分類欄位（暫時停用）
+            // ESkillType.Text     = "";
+            // ETriggerType.Text   = "";
+            // ESkillCategory.Text = "";
             _suppressEditEvents = true;
             RHandNone.IsChecked = true;
             foreach (var w in WeaponCatalog) w.IsChecked = false;
@@ -478,9 +481,10 @@ public partial class MainWindow : Window
         _suppressEditEvents = true;
         ETitle.Text  = $"編輯：[{edit.Original.SkillID}] {edit.Original.DisplayName}";
         ETarget.Text = edit.TargetPreference;
-        ESkillType.Text     = edit.SkillType;
-        ETriggerType.Text   = edit.TriggerType;
-        ESkillCategory.Text = edit.SkillCategory;
+        // 進階分類欄位（暫時停用）
+        // ESkillType.Text     = edit.SkillType;
+        // ETriggerType.Text   = edit.TriggerType;
+        // ESkillCategory.Text = edit.SkillCategory;
         ParseWeaponStringToUi(edit.WeaponStringID ?? "");
         _suppressEditEvents = false;
 

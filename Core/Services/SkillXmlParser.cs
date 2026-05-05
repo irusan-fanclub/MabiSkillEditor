@@ -129,14 +129,15 @@ public class SkillXmlParser
             line = ApplyField(line, "TargetPreference",
                 skill.TargetPreference, edit.TargetPreference, diffLines);
 
-            line = ApplyField(line, "SkillType",
-                skill.SkillType, edit.SkillType, diffLines);
-
-            line = ApplyField(line, "TriggerType",
-                skill.TriggerType, edit.TriggerType, diffLines);
-
-            line = ApplyField(line, "SkillCategory",
-                skill.SkillCategory, edit.SkillCategory, diffLines);
+            // 進階分類欄位（暫時停用）
+            // line = ApplyField(line, "SkillType",
+            //     skill.SkillType, edit.SkillType, diffLines);
+            //
+            // line = ApplyField(line, "TriggerType",
+            //     skill.TriggerType, edit.TriggerType, diffLines);
+            //
+            // line = ApplyField(line, "SkillCategory",
+            //     skill.SkillCategory, edit.SkillCategory, diffLines);
 
             var oldHidden = skill.IsHidden ? "True" : "False";
             var newHidden = edit.IsHidden  ? "True" : "False";

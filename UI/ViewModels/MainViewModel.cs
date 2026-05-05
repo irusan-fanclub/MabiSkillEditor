@@ -254,9 +254,10 @@ public class MainViewModel : INotifyPropertyChanged
                     case "WeaponStringID":   edit.WeaponStringID   = c.NewValue; break;
                     case "TargetPreference": edit.TargetPreference = c.NewValue; break;
                     case "IsHidden":         edit.IsHidden = c.NewValue == "True"; break;
-                    case "SkillType":        edit.SkillType        = c.NewValue; break;
-                    case "TriggerType":      edit.TriggerType      = c.NewValue; break;
-                    case "SkillCategory":    edit.SkillCategory    = c.NewValue; break;
+                    // 進階分類欄位（暫時停用）
+                    // case "SkillType":        edit.SkillType        = c.NewValue; break;
+                    // case "TriggerType":      edit.TriggerType      = c.NewValue; break;
+                    // case "SkillCategory":    edit.SkillCategory    = c.NewValue; break;
                 }
             }
             Session.Commit(edit);

@@ -16,24 +16,26 @@ public class SkillEdit
         WeaponStringID   = original.WeaponStringID;
         TargetPreference = original.TargetPreference;
         IsHidden         = original.IsHidden;
-        SkillType        = original.SkillType;
-        TriggerType      = original.TriggerType;
-        SkillCategory    = original.SkillCategory;
+        // 進階分類欄位（暫時停用）
+        // SkillType        = original.SkillType;
+        // TriggerType      = original.TriggerType;
+        // SkillCategory    = original.SkillCategory;
     }
 
     public string WeaponStringID   { get; set; }
     public string TargetPreference { get; set; }
     public bool   IsHidden         { get; set; }
-    public string SkillType        { get; set; }
-    public string TriggerType      { get; set; }
-    public string SkillCategory    { get; set; }
+    // 進階分類欄位（暫時停用）
+    // public string SkillType        { get; set; }
+    // public string TriggerType      { get; set; }
+    // public string SkillCategory    { get; set; }
 
     /// <summary>是否與原始值有任何差異</summary>
     public bool HasChanges =>
         WeaponStringID   != Original.WeaponStringID   ||
         TargetPreference != Original.TargetPreference ||
-        IsHidden         != Original.IsHidden         ||
-        SkillType        != Original.SkillType        ||
-        TriggerType      != Original.TriggerType      ||
-        SkillCategory    != Original.SkillCategory;
+        IsHidden         != Original.IsHidden;
+        // SkillType        != Original.SkillType        ||
+        // TriggerType      != Original.TriggerType      ||
+        // SkillCategory    != Original.SkillCategory;
 }

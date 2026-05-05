@@ -9,7 +9,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>MabiSkillEditor</AssemblyName>
     <RootNamespace>MabiSkillEditor</RootNamespace>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <DefaultItemExcludes>$(DefaultItemExcludes);scripts\**;publish\**</DefaultItemExcludes>
   </PropertyGroup>

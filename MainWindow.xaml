@@ -420,9 +420,9 @@
                         <TextBlock Text="TargetPreference" Foreground="#a6adc8" Margin="0,0,0,4"/>
                         <TextBox x:Name="ETarget" Margin="0,0,0,14"/>
 
-                        <!-- ── 進階：分類欄位（預設摺疊） ── -->
+                        <!-- 進階：分類欄位（暫時停用，下版本啟用）
                         <ToggleButton x:Name="EAdvancedToggle"
-                                      Content="▸ 進階：分類欄位"
+                                      Content="進階：分類欄位"
                                       Background="Transparent" Foreground="#a6adc8"
                                       BorderThickness="0" HorizontalAlignment="Left"
                                       Cursor="Hand" Padding="0" Margin="0,0,0,6"
@@ -438,6 +438,7 @@
                             <TextBlock Text="留空 = 套用時刪除此屬性"
                                        Foreground="#585b70" FontSize="10"/>
                         </StackPanel>
+                        -->
 
                         <StackPanel Orientation="Horizontal">
                             <Button Content="套用修改" Click="BtnCommit_Click" Width="90"/>
