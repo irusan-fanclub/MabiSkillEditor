@@ -31,10 +31,18 @@ jobs:
           fi
           echo "Resolving release for tag: $tag"
 
-          json=$(gh release view "$tag" --repo "${{ github.repository }}" --json name,body,url,tagName)
+          json=$(gh release view "$tag" --repo "${{ github.repository }}" --json name,body,url,tagName,assets)
           name=$(echo "$json" | jq -r '.name // .tagName')
           url=$(echo  "$json" | jq -r '.url')
           body=$(echo "$json" | jq -r '.body')
+
+          # 第一顆 .zip 視為主下載
+          asset_name=$(echo "$json" | jq -r '.assets[]? | select(.name | endswith(".zip")) | .name' | head -n1)
+          asset_url=""
+          if [ -n "$asset_name" ]; then
+            asset_url="https://github.com/${{ github.repository }}/releases/download/$tag/$asset_name"
+          fi
+          src_url="https://github.com/${{ github.repository }}/archive/refs/tags/$tag.zip"
 
           # Discord embed.description 上限 4096 字
           if [ "${#body}" -gt 4000 ]; then
@@ -44,6 +52,10 @@ jobs:
           {
             echo "name=$name"
             echo "url=$url"
+            echo "tag=$tag"
+            echo "asset_name=$asset_name"
+            echo "asset_url=$asset_url"
+            echo "src_url=$src_url"
             echo "body<<RELEASE_BODY_EOF"
             echo "$body"
             echo "RELEASE_BODY_EOF"
@@ -51,17 +63,34 @@ jobs:
 
       - name: Send Discord embed
         env:
-          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          NAME:    ${{ steps.rel.outputs.name }}
-          URL:     ${{ steps.rel.outputs.url }}
-          BODY:    ${{ steps.rel.outputs.body }}
-          THUMB:   https://raw.githubusercontent.com/${{ github.repository }}/main/icons/app-256.png
+          WEBHOOK:    ${{ secrets.DISCORD_WEBHOOK_URL }}
+          NAME:       ${{ steps.rel.outputs.name }}
+          URL:        ${{ steps.rel.outputs.url }}
+          BODY:       ${{ steps.rel.outputs.body }}
+          TAG:        ${{ steps.rel.outputs.tag }}
+          ASSET_NAME: ${{ steps.rel.outputs.asset_name }}
+          ASSET_URL:  ${{ steps.rel.outputs.asset_url }}
+          SRC_URL:    ${{ steps.rel.outputs.src_url }}
+          THUMB:      https://raw.githubusercontent.com/${{ github.repository }}/main/icons/app-256.png
         run: |
+          fields=$(jq -n \
+            --arg an  "$ASSET_NAME" \
+            --arg au  "$ASSET_URL"  \
+            --arg tag "$TAG"        \
+            --arg su  "$SRC_URL"    \
+            '[
+              (if $au != "" then
+                { name: "📥 直接下載", value: ("[" + $an + "](" + $au + ")"), inline: true }
+              else empty end),
+              { name: "📦 原始碼", value: ("[" + $tag + ".zip](" + $su + ")"), inline: true }
+            ]')
+
           payload=$(jq -n \
-            --arg title "$NAME" \
-            --arg desc  "$BODY" \
-            --arg url   "$URL"  \
-            --arg thumb "$THUMB" \
+            --arg title     "$NAME" \
+            --arg desc      "$BODY" \
+            --arg url       "$URL"  \
+            --arg thumb     "$THUMB" \
+            --argjson flds  "$fields" \
             '{
               embeds: [{
                 title: $title,
@@ -69,6 +98,7 @@ jobs:
                 url: $url,
                 color: 9024762,
                 thumbnail: { url: $thumb },
+                fields: $flds,
                 footer: { text: "irusan-fanclub/MabiSkillEditor" }
               }],
               allowed_mentions: { parse: [] }
