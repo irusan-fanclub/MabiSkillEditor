@@ -26,6 +26,7 @@ internal static class Program
     {
         var outPath = args.Length > 0 ? args[0] : "app.ico";
         var hex     = args.Length > 1 ? args[1] : "#89b4fa";
+        var pngSize = args.Length > 2 && int.TryParse(args[2], out var s) ? s : 256;
 
         var color = (Color)ColorConverter.ConvertFromString(hex)!;
         var brush = new SolidColorBrush(color); brush.Freeze();
@@ -42,25 +43,20 @@ internal static class Program
             dg.Children.Add(new GeometryDrawing(null, pen, Geometry.Parse(p)));
         dg.Freeze();
 
+        // .png 模式：只輸出單張高解 PNG（給 Discord embed thumbnail 用）
+        var ext = Path.GetExtension(outPath).ToLowerInvariant();
+        if (ext == ".png")
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outPath))!);
+            File.WriteAllBytes(outPath, RenderPng(dg, pngSize));
+            Console.WriteLine($"Wrote {Path.GetFullPath(outPath)} ({pngSize}x{pngSize}) color={hex}");
+            return 0;
+        }
+
         int[] sizes = { 16, 24, 32, 48, 64, 128, 256 };
         var pngs = new List<(int Size, byte[] Data)>();
         foreach (var size in sizes)
-        {
-            var visual = new DrawingVisual();
-            using (var ctx = visual.RenderOpen())
-            {
-                ctx.PushTransform(new ScaleTransform(size / 24.0, size / 24.0));
-                ctx.DrawDrawing(dg);
-                ctx.Pop();
-            }
-            var rtb = new RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
-            rtb.Render(visual);
-            var enc = new PngBitmapEncoder();
-            enc.Frames.Add(BitmapFrame.Create(rtb));
-            using var ms = new MemoryStream();
-            enc.Save(ms);
-            pngs.Add((size, ms.ToArray()));
-        }
+            pngs.Add((size, RenderPng(dg, size)));
 
         // Write ICO (PNG-embedded)
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outPath))!);
@@ -88,5 +84,23 @@ internal static class Program
 
         Console.WriteLine($"Wrote {Path.GetFullPath(outPath)} with {pngs.Count} frames ({string.Join(",", sizes)}) color={hex}");
         return 0;
+    }
+
+    private static byte[] RenderPng(DrawingGroup dg, int size)
+    {
+        var visual = new DrawingVisual();
+        using (var ctx = visual.RenderOpen())
+        {
+            ctx.PushTransform(new ScaleTransform(size / 24.0, size / 24.0));
+            ctx.DrawDrawing(dg);
+            ctx.Pop();
+        }
+        var rtb = new RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
+        rtb.Render(visual);
+        var enc = new PngBitmapEncoder();
+        enc.Frames.Add(BitmapFrame.Create(rtb));
+        using var ms = new MemoryStream();
+        enc.Save(ms);
+        return ms.ToArray();
     }
 }

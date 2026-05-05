@@ -1,0 +1,79 @@
+name: Discord release announcement
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要公告的 release tag（測試模式）'
+        required: true
+        default: 'v0.1.2'
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    # release 模式跳過 pre-release；workflow_dispatch 一律送
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false }}
+    steps:
+      - name: Resolve release info
+        id: rel
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${{ github.event.release.tag_name }}"
+          fi
+          echo "Resolving release for tag: $tag"
+
+          json=$(gh release view "$tag" --repo "${{ github.repository }}" --json name,body,htmlUrl,tagName)
+          name=$(echo "$json" | jq -r '.name // .tagName')
+          url=$(echo  "$json" | jq -r '.htmlUrl')
+          body=$(echo "$json" | jq -r '.body')
+
+          # Discord embed.description 上限 4096 字
+          if [ "${#body}" -gt 4000 ]; then
+            body="${body:0:3990}…（已截斷，完整內容請點 release 連結）"
+          fi
+
+          {
+            echo "name=$name"
+            echo "url=$url"
+            echo "body<<RELEASE_BODY_EOF"
+            echo "$body"
+            echo "RELEASE_BODY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Send Discord embed
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          NAME:    ${{ steps.rel.outputs.name }}
+          URL:     ${{ steps.rel.outputs.url }}
+          BODY:    ${{ steps.rel.outputs.body }}
+          THUMB:   https://raw.githubusercontent.com/${{ github.repository }}/main/icons/app-256.png
+        run: |
+          payload=$(jq -n \
+            --arg title "$NAME" \
+            --arg desc  "$BODY" \
+            --arg url   "$URL"  \
+            --arg thumb "$THUMB" \
+            '{
+              embeds: [{
+                title: $title,
+                description: $desc,
+                url: $url,
+                color: 9024762,
+                thumbnail: { url: $thumb },
+                footer: { text: "irusan-fanclub/MabiSkillEditor" }
+              }],
+              allowed_mentions: { parse: [] }
+            }')
+
+          # -f 會在 4xx/5xx 失敗，搭配 -sS 拿到 stderr
+          curl -fsS -X POST -H "Content-Type: application/json" \
+               -d "$payload" "$WEBHOOK"
