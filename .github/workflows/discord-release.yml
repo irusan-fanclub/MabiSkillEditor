@@ -31,9 +31,9 @@ jobs:
           fi
           echo "Resolving release for tag: $tag"
 
-          json=$(gh release view "$tag" --repo "${{ github.repository }}" --json name,body,htmlUrl,tagName)
+          json=$(gh release view "$tag" --repo "${{ github.repository }}" --json name,body,url,tagName)
           name=$(echo "$json" | jq -r '.name // .tagName')
-          url=$(echo  "$json" | jq -r '.htmlUrl')
+          url=$(echo  "$json" | jq -r '.url')
           body=$(echo "$json" | jq -r '.body')
 
           # Discord embed.description 上限 4096 字
