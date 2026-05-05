@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -20,10 +21,11 @@ public class PackExtractService
 
     /// <summary>
     /// 從指定 .it 解出特定內部路徑的檔案到 origin/ 目錄
-    /// knownSalt：sources.json 中指定的 salt，優先使用
-    /// 回傳解出後的本地路徑，失敗則拋出例外
+    /// candidateSalts：依序嘗試的 salt 清單（不會打遠端）
+    /// 回傳解出後的本地路徑與真正成功的 salt
     /// </summary>
-    public string Extract(string itFileName, string innerPath, string? knownSalt = null)
+    public (string Path, string SaltUsed) Extract(
+        string itFileName, string innerPath, IEnumerable<string> candidateSalts)
     {
         if (!File.Exists(_mabiPackPath))
             throw new FileNotFoundException($"找不到 mabi-pack2.exe：{_mabiPackPath}");
@@ -34,31 +36,33 @@ public class PackExtractService
 
         Directory.CreateDirectory(_originDir);
 
-        // 優先用 sources.json 指定的 salt
-        (bool Success, string ErrorMessage) result = (false, "");
-        if (!string.IsNullOrEmpty(knownSalt))
-            result = RunExtract(itPath, innerPath, key: knownSalt);
+        var errors = new List<string>();
+        string? working = null;
 
-        // fallback：不帶 -k 讓工具自動試（需伺服器可用）
-        if (!result.Success)
-            result = RunExtract(itPath, innerPath, key: null);
+        foreach (var salt in candidateSalts)
+        {
+            if (string.IsNullOrEmpty(salt)) continue;
+            var r = RunExtract(itPath, innerPath, key: salt);
+            if (r.Success) { working = salt; break; }
+            errors.Add($"[{Mask(salt)}] {r.ErrorMessage.Trim()}");
+        }
 
-        // 最後 fallback：mod salt
-        if (!result.Success)
-            result = RunExtract(itPath, innerPath, key: ModSalt);
+        if (working == null)
+            throw new System.Exception(
+                $"解包失敗 ({itFileName})：所有已知 salt 都無法解開。\n" +
+                "請在 sources.json 的 KnownSalts 加入新 salt（會在下次成功時自動排到首位）。\n\n" +
+                string.Join("\n", errors));
 
-        if (!result.Success)
-            throw new Exception($"解包失敗 ({itFileName}):\n{result.ErrorMessage}");
-
-        // 轉換 inner path 分隔符，找到輸出檔案
         var outputFile = Path.Combine(_originDir,
             innerPath.Replace('/', Path.DirectorySeparatorChar));
-
         if (!File.Exists(outputFile))
             throw new FileNotFoundException($"解包後找不到輸出檔案：{outputFile}");
 
-        return outputFile;
+        return (outputFile, working);
     }
+
+    private static string Mask(string salt)
+        => salt.Length <= 4 ? salt : salt[..2] + "***" + salt[^2..];
 
     private (bool Success, string ErrorMessage) RunExtract(
         string itPath, string innerPath, string? key)
@@ -113,6 +117,6 @@ public class PackExtractService
         proc.WaitForExit();
 
         if (proc.ExitCode != 0)
-            throw new Exception($"打包失敗:\n{stderr}");
+            throw new System.Exception($"打包失敗:\n{stderr}");
     }
 }

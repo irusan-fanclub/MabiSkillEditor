@@ -71,6 +71,11 @@ public static class ConfigService
         return JsonSerializer.Deserialize<SourcesConfig>(json) ?? new SourcesConfig();
     }
 
+    public static void SaveSources(SourcesConfig sources)
+    {
+        File.WriteAllText(SourcesPath, JsonSerializer.Serialize(sources, _opts));
+    }
+
     // ── 工具 ─────────────────────────────────────────
 
     public static string AppDir =>

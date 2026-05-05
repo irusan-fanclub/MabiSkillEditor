@@ -61,6 +61,13 @@ public class MainViewModel : INotifyPropertyChanged
         set { _searchText = value; OnPropertyChanged(); ApplyFilter(); }
     }
 
+    private bool _showMonsterSkills;
+    public bool ShowMonsterSkills
+    {
+        get => _showMonsterSkills;
+        set { _showMonsterSkills = value; OnPropertyChanged(); ApplyFilter(); }
+    }
+
     // ── 選取的技能 ────────────────────────────────────
 
     private SkillEntry? _selectedSkill;
@@ -105,20 +112,30 @@ public class MainViewModel : INotifyPropertyChanged
         List<string>      talentKeys = new();
 
         // ── 重量 I/O 在背景執行緒 ──────────────────────
+        bool sourcesChanged = false;
         await Task.Run(() =>
         {
             progress.Report("正在解包 SkillInfo.xml...");
-            originXmlPath = extractor.Extract(
-                sources.SkillInfoIt, sources.SkillInfoInnerPath, sources.SkillInfoItSalt);
+            var (xmlPath, xmlSalt) = extractor.Extract(
+                sources.SkillInfoIt, sources.SkillInfoInnerPath, sources.KnownSalts);
+            originXmlPath = xmlPath;
+            if (xmlSalt != null && HoistSalt(sources.KnownSalts, xmlSalt))
+                sourcesChanged = true;
 
             progress.Report("正在解包本地化檔案...");
-            var locPath = extractor.Extract(
-                sources.LocalizationIt, sources.LocalizationInnerPath, sources.LocalizationItSalt);
+            var (locPath, locSalt) = extractor.Extract(
+                sources.LocalizationIt, sources.LocalizationInnerPath, sources.KnownSalts);
             _loc.Load(locPath);
+            if (locSalt != null && HoistSalt(sources.KnownSalts, locSalt))
+                sourcesChanged = true;
 
             progress.Report("正在解析 XML...");
             (skills, talentKeys) = _parser.Parse(originXmlPath);
         });
+
+        // 把實際成功的 salt 排到首位並持久化（清掉舊欄位、寫成新 list 格式）
+        if (sourcesChanged)
+            ConfigService.SaveSources(sources);
 
         // ── 回到 UI 執行緒更新集合 ──────────────────────
         _originXmlPath = originXmlPath;
@@ -237,6 +254,9 @@ public class MainViewModel : INotifyPropertyChanged
                     case "WeaponStringID":   edit.WeaponStringID   = c.NewValue; break;
                     case "TargetPreference": edit.TargetPreference = c.NewValue; break;
                     case "IsHidden":         edit.IsHidden = c.NewValue == "True"; break;
+                    case "SkillType":        edit.SkillType        = c.NewValue; break;
+                    case "TriggerType":      edit.TriggerType      = c.NewValue; break;
+                    case "SkillCategory":    edit.SkillCategory    = c.NewValue; break;
                 }
             }
             Session.Commit(edit);
@@ -254,8 +274,10 @@ public class MainViewModel : INotifyPropertyChanged
     {
         var q = _searchText.Trim().ToLowerInvariant();
 
-        // 排除怪物技能（AvailableRace == 0）
-        var source = _allSkills.Where(s => s.AvailableRace != 0);
+        // 預設排除怪物/寵物技能（AvailableRace <= 0：== 0 或未設定），勾選後顯示
+        var source = _showMonsterSkills
+            ? (IEnumerable<SkillEntry>)_allSkills
+            : _allSkills.Where(s => s.AvailableRace > 0);
 
         var filtered = string.IsNullOrEmpty(q)
             ? source
@@ -267,6 +289,15 @@ public class MainViewModel : INotifyPropertyChanged
         DisplayedSkills.Clear();
         foreach (var s in filtered)
             DisplayedSkills.Add(s);
+    }
+
+    // 把成功的 salt 移到 list 首位；若 list 已是該順序則回傳 false
+    private static bool HoistSalt(List<string> salts, string used)
+    {
+        if (salts.Count > 0 && salts[0] == used) return false;
+        salts.Remove(used);
+        salts.Insert(0, used);
+        return true;
     }
 
     // ── INotifyPropertyChanged ────────────────────────

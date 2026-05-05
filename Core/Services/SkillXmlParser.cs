@@ -83,6 +83,9 @@ public class SkillXmlParser
                 WeaponStringID    = attrs.GetValueOrDefault("WeaponStringID", ""),
                 TargetPreference  = attrs.GetValueOrDefault("TargetPreference", ""),
                 ProcessTargetType = attrs.GetValueOrDefault("ProcessTargetType", ""),
+                SkillType         = attrs.GetValueOrDefault("SkillType", ""),
+                TriggerType       = attrs.GetValueOrDefault("TriggerType", ""),
+                SkillCategory     = attrs.GetValueOrDefault("SkillCategory", ""),
                 LocalName         = _loc.Resolve(attrs.GetValueOrDefault("SkillLocalName", "")),
             };
 
@@ -125,6 +128,15 @@ public class SkillXmlParser
 
             line = ApplyField(line, "TargetPreference",
                 skill.TargetPreference, edit.TargetPreference, diffLines);
+
+            line = ApplyField(line, "SkillType",
+                skill.SkillType, edit.SkillType, diffLines);
+
+            line = ApplyField(line, "TriggerType",
+                skill.TriggerType, edit.TriggerType, diffLines);
+
+            line = ApplyField(line, "SkillCategory",
+                skill.SkillCategory, edit.SkillCategory, diffLines);
 
             var oldHidden = skill.IsHidden ? "True" : "False";
             var newHidden = edit.IsHidden  ? "True" : "False";

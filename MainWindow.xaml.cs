@@ -63,6 +63,14 @@ public partial class MainWindow : Window
         TxtItName.Text     = _vm.OutputItName;
         TxtStatus.Text     = _vm.Status;
 
+        // Titlebar 版本字串（讀組件版本）
+        var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        if (ver != null) TitleVersion.Text = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
+
+        // Titlebar 雙擊：最大化／還原
+        StateChanged += (_, _) =>
+            BtnMax.Content = WindowState == WindowState.Maximized ? "" : "";
+
         _vm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.Status))
@@ -74,6 +82,18 @@ public partial class MainWindow : Window
         SkillGrid.ItemsSource    = _vm.DisplayedSkills;
         ModifiedGrid.ItemsSource = _vm.ModifiedSkills;
     }
+
+    // ── Titlebar 視窗按鈕 ────────────────────────────
+
+    private void BtnMin_Click(object sender, RoutedEventArgs e)
+        => WindowState = WindowState.Minimized;
+
+    private void BtnMax_Click(object sender, RoutedEventArgs e)
+        => WindowState = WindowState == WindowState.Maximized
+            ? WindowState.Normal
+            : WindowState.Maximized;
+
+    private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
 
     // ── 工具列 ───────────────────────────────────────
 
@@ -262,6 +282,9 @@ public partial class MainWindow : Window
     private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         => _vm.SearchText = TxtSearch.Text;
 
+    private void ChkShowMonster_Changed(object sender, RoutedEventArgs e)
+        => _vm.ShowMonsterSkills = ChkShowMonster.IsChecked == true;
+
     // ── 技能清單選取 ──────────────────────────────────
 
     private void SkillGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -289,8 +312,18 @@ public partial class MainWindow : Window
         if (_vm.CurrentEdit == null) return;
         _vm.CurrentEdit.WeaponStringID   = BuildWeaponString();
         _vm.CurrentEdit.TargetPreference = ETarget.Text;
+        _vm.CurrentEdit.SkillType        = ESkillType.Text;
+        _vm.CurrentEdit.TriggerType      = ETriggerType.Text;
+        _vm.CurrentEdit.SkillCategory    = ESkillCategory.Text;
         // IsHidden 不從 UI 讀取，保留原始值
         _vm.CommitCurrentEdit();
+    }
+
+    private void EAdvancedToggle_Changed(object sender, RoutedEventArgs e)
+    {
+        var open = EAdvancedToggle.IsChecked == true;
+        EAdvancedPanel.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+        EAdvancedToggle.Content   = (open ? "▾" : "▸") + " 進階：分類欄位";
     }
 
     private void BtnRevert_Click(object sender, RoutedEventArgs e)
@@ -412,6 +445,9 @@ public partial class MainWindow : Window
         OEng.Text        = skill.EngName;
         OHidden.Text     = skill.IsHidden ? "True（隱藏）" : "False";
         OAvailRace.Text  = skill.AvailableRaceDisplay;
+        OSkillType.Text     = string.IsNullOrEmpty(skill.SkillType)     ? "（未設定）" : skill.SkillType;
+        OTriggerType.Text   = string.IsNullOrEmpty(skill.TriggerType)   ? "（未設定）" : skill.TriggerType;
+        OSkillCategory.Text = string.IsNullOrEmpty(skill.SkillCategory) ? "（未設定）" : skill.SkillCategory;
         OWeapon.Text     = string.IsNullOrEmpty(skill.WeaponStringID) ? "（無限制）" : skill.WeaponStringID;
         OTarget.Text     = string.IsNullOrEmpty(skill.TargetPreference) ? "（未設定）" : skill.TargetPreference;
         OTalents.ItemsSource = skill.TalentValues
@@ -427,6 +463,9 @@ public partial class MainWindow : Window
         {
             ETitle.Text = "選擇技能後在此編輯";
             ETarget.Text = "";
+            ESkillType.Text     = "";
+            ETriggerType.Text   = "";
+            ESkillCategory.Text = "";
             _suppressEditEvents = true;
             RHandNone.IsChecked = true;
             foreach (var w in WeaponCatalog) w.IsChecked = false;
@@ -439,6 +478,9 @@ public partial class MainWindow : Window
         _suppressEditEvents = true;
         ETitle.Text  = $"編輯：[{edit.Original.SkillID}] {edit.Original.DisplayName}";
         ETarget.Text = edit.TargetPreference;
+        ESkillType.Text     = edit.SkillType;
+        ETriggerType.Text   = edit.TriggerType;
+        ESkillCategory.Text = edit.SkillCategory;
         ParseWeaponStringToUi(edit.WeaponStringID ?? "");
         _suppressEditEvents = false;
 

@@ -50,6 +50,11 @@ public class SkillEntry
     public string TargetPreference  { get; set; } = "";
     public string ProcessTargetType { get; set; } = "";
 
+    // ── 分類 ──────────────────────────────────────────
+    public string SkillType     { get; set; } = "";
+    public string TriggerType   { get; set; } = "";
+    public string SkillCategory { get; set; } = "";
+
     // ── 職業 / 天賦（key = 欄位名稱，value = 原始字串）
     public Dictionary<string, string> TalentValues { get; set; } = new();
 
