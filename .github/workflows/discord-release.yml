@@ -80,7 +80,7 @@ jobs:
             --arg su  "$SRC_URL"    \
             '[
               (if $au != "" then
-                { name: "📥 直接下載", value: ("[" + $an + "](" + $au + ")"), inline: true }
+                { name: "📥 下載", value: ("[" + $an + "](" + $au + ")"), inline: true }
               else empty end),
               { name: "📦 原始碼", value: ("[" + $tag + ".zip](" + $su + ")"), inline: true }
             ]')
