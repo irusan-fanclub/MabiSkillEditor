@@ -3,6 +3,11 @@
   "SkillInfoInnerPath": "data/db/Skill/SkillInfo.xml",
   "LocalizationIt": "data_00756.it",
   "LocalizationInnerPath": "data/local/xml/SkillInfo.taiwan.txt",
+  "WeaponIt": "data_00633.it",
+  "WeaponInnerPath": "data/db/itemDB_Weapon.xml",
+  "WeaponLocalizationInnerPath": "data/local/xml/itemdb_weapon.taiwan.txt",
+  "ItemDbInnerPath": "data/db/ItemDB.xml",
+  "ItemDbLocalizationInnerPath": "data/local/xml/ItemDB.taiwan.txt",
   "KnownSalts": [
     "@6QeTuOaDgJlZcBm#9",
     "s_U[ht6c%!5gG4NZ|b",

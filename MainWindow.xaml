@@ -75,33 +75,6 @@
             </Style.Triggers>
         </Style>
 
-        <!-- ── 視窗 caption 按鈕（最小化／最大化／關閉） ── -->
-        <Style x:Key="CaptionBtn" TargetType="Button">
-            <Setter Property="Background"      Value="Transparent"/>
-            <Setter Property="Foreground"      Value="#cdd6f4"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Width"           Value="46"/>
-            <Setter Property="Height"          Value="32"/>
-            <Setter Property="FontFamily"      Value="Segoe MDL2 Assets"/>
-            <Setter Property="FontSize"        Value="10"/>
-            <Setter Property="Cursor"          Value="Hand"/>
-            <Setter Property="shell:WindowChrome.IsHitTestVisibleInChrome" Value="True"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bg" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bg" Property="Background" Value="#313244"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
         <!-- ── TabControl 樣式（兩個主分頁） ── -->
         <Style TargetType="TabControl">
             <Setter Property="Background"      Value="#1e1e2e"/>
@@ -149,24 +122,6 @@
             </Setter>
         </Style>
 
-        <Style x:Key="CloseBtn" TargetType="Button" BasedOn="{StaticResource CaptionBtn}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bg" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bg" Property="Background" Value="#f38ba8"/>
-                                <Setter Property="Foreground" Value="#1e1e2e"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </Window.Resources>
 
     <Grid>
@@ -455,10 +410,22 @@
                         </ItemsControl>
 
                         <!-- 自訂條件 -->
-                        <TextBlock Text="自訂條件（以 | 附加在最後）" Foreground="#585b70" FontSize="11" Margin="0,0,0,4"/>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="自訂條件（以 | 附加在最後）" Grid.Column="0"
+                                       Foreground="#585b70" FontSize="11" VerticalAlignment="Center"/>
+                            <Button x:Name="BtnWeaponPicker" Content="+ 從武器找 tag"
+                                    Grid.Column="1" Style="{StaticResource SecondBtn}"
+                                    FontSize="11" Padding="6,2"
+                                    Click="BtnWeaponPicker_Click"
+                                    ToolTip="從遊戲武器資料挑 tag 加入自訂條件"/>
+                        </Grid>
                         <TextBox x:Name="EWeaponCustom" Margin="0,0,0,8"
                                  TextChanged="EWeaponCustom_TextChanged"
-                                 ToolTip="可填入任意 token，例如 /staff/ | /wand/"/>
+                                 ToolTip="可填入任意 tag，例如 /staff/ | /wand/"/>
 
                         <!-- 預覽 -->
                         <TextBlock Text="預覽" Foreground="#585b70" FontSize="11" Margin="0,0,0,4"/>

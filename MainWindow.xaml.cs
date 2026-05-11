@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using MabiSkillEditor.Core.Models;
 using MabiSkillEditor.UI.ViewModels;
+using MabiSkillEditor.UI.Windows;
 using WinMsgBox = System.Windows.MessageBox;
 using WinForms  = System.Windows.Forms;
 
@@ -19,7 +20,7 @@ public partial class MainWindow : Window
     private readonly MainViewModel _vm = new();
     private bool _suppressEditEvents;
 
-    // ── 武器 token 清單（不含持握方式 righthand/twohand，那兩個移到 Radio）──
+    // ── 武器 tag 清單（不含持握方式 righthand/twohand，那兩個移到 Radio）──
     private static readonly List<WeaponCheckItem> WeaponCatalog = new()
     {
         new("/staff/",              "長杖"),
@@ -43,11 +44,11 @@ public partial class MainWindow : Window
         new("/weapontype_combat/",  "近戰武器"),
     };
 
-    private static readonly HashSet<string> HandTokens =
+    private static readonly HashSet<string> HandTags =
         new() { "/righthand/", "/twohand/" };
 
-    private static readonly HashSet<string> CatalogTokens =
-        new(WeaponCatalog.Select(w => w.Token));
+    private static readonly HashSet<string> CatalogTags =
+        new(WeaponCatalog.Select(w => w.Tag));
 
     public MainWindow()
     {
@@ -80,7 +81,11 @@ public partial class MainWindow : Window
                 UpdateTitleVersion();
             if (e.PropertyName == nameof(MainViewModel.OutputItName))
                 TxtItName.Text = _vm.OutputItName;
+            if (e.PropertyName == nameof(MainViewModel.IsWeaponDataLoaded))
+                BtnWeaponPicker.IsEnabled = _vm.IsWeaponDataLoaded;
         };
+
+        BtnWeaponPicker.IsEnabled = _vm.IsWeaponDataLoaded;
 
         SkillGrid.ItemsSource    = _vm.DisplayedSkills;
         ModifiedGrid.ItemsSource = _vm.ModifiedSkills;
@@ -91,6 +96,29 @@ public partial class MainWindow : Window
     {
         if (sender is FrameworkElement fe && fe.Tag is PresetViewModel pvm)
             _vm.ApplyPreset(pvm);
+    }
+
+    private void BtnWeaponPicker_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_vm.IsWeaponDataLoaded) return;
+
+        // 把現有 19 個 weapon-type catalog 餵給 picker 當「類型」filter dropdown
+        var typeFilters = WeaponCatalog.Select(w =>
+        {
+            var tag = w.Tag.Trim('/');
+            return (tag, $"{w.DisplayName} ({w.Tag})");
+        });
+
+        var dlg = new WeaponPickerWindow(_vm.Weapons, _vm.WeaponsByTag, typeFilters)
+        {
+            Owner = this,
+        };
+        if (dlg.ShowDialog() != true || dlg.SelectedTags.Count == 0) return;
+
+        var addition = string.Join(" | ", dlg.SelectedTags.Select(t => $"/{t}/"));
+        EWeaponCustom.Text = string.IsNullOrWhiteSpace(EWeaponCustom.Text)
+            ? addition
+            : $"{EWeaponCustom.Text.TrimEnd()} | {addition}";
     }
 
     // ── Titlebar 視窗按鈕 ────────────────────────────
@@ -369,7 +397,7 @@ public partial class MainWindow : Window
     private string BuildWeaponString()
     {
         var hand    = GetSelectedHand();
-        var weapons = WeaponCatalog.Where(w => w.IsChecked).Select(w => w.Token).ToList();
+        var weapons = WeaponCatalog.Where(w => w.IsChecked).Select(w => w.Tag).ToList();
         var custom  = EWeaponCustom?.Text?.Trim() ?? "";
 
         string weaponPart;
@@ -416,7 +444,7 @@ public partial class MainWindow : Window
         var handFound   = "";
         var customParts = new List<string>();
 
-        // 以 " | " 分割各 token 片段
+        // 以 " | " 分割各 tag 片段
         var segments = raw.Split(new[] { " | " }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var seg in segments)
         {
@@ -428,11 +456,11 @@ public partial class MainWindow : Window
                 var left = s[..idx].Trim();
                 var right = s[(idx + 3)..].Trim();
 
-                if (HandTokens.Contains(left))
+                if (HandTags.Contains(left))
                 {
                     handFound = left;
-                    if (CatalogTokens.Contains(right))
-                        WeaponCatalog.First(w => w.Token == right).IsChecked = true;
+                    if (CatalogTags.Contains(right))
+                        WeaponCatalog.First(w => w.Tag == right).IsChecked = true;
                     else
                         customParts.Add(s);
                 }
@@ -441,13 +469,13 @@ public partial class MainWindow : Window
                     customParts.Add(s);
                 }
             }
-            else if (HandTokens.Contains(s))
+            else if (HandTags.Contains(s))
             {
                 handFound = s;
             }
-            else if (CatalogTokens.Contains(s))
+            else if (CatalogTags.Contains(s))
             {
-                WeaponCatalog.First(w => w.Token == s).IsChecked = true;
+                WeaponCatalog.First(w => w.Tag == s).IsChecked = true;
             }
             else
             {

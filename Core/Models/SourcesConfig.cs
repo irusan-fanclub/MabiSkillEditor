@@ -4,10 +4,15 @@ namespace MabiSkillEditor.Core.Models;
 
 public class SourcesConfig
 {
-    public string SkillInfoIt           { get; set; } = "data_00640.it";
-    public string SkillInfoInnerPath    { get; set; } = "data/db/Skill/SkillInfo.xml";
-    public string LocalizationIt        { get; set; } = "data_00756.it";
-    public string LocalizationInnerPath { get; set; } = "data/local/xml/SkillInfo.taiwan.txt";
+    public string SkillInfoIt                  { get; set; } = "data_00640.it";
+    public string SkillInfoInnerPath           { get; set; } = "data/db/Skill/SkillInfo.xml";
+    public string LocalizationIt               { get; set; } = "data_00756.it";
+    public string LocalizationInnerPath        { get; set; } = "data/local/xml/SkillInfo.taiwan.txt";
+    public string WeaponIt                     { get; set; } = "data_00633.it";
+    public string WeaponInnerPath              { get; set; } = "data/db/itemDB_Weapon.xml";
+    public string WeaponLocalizationInnerPath  { get; set; } = "data/local/xml/itemdb_weapon.taiwan.txt";
+    public string ItemDbInnerPath              { get; set; } = "data/db/ItemDB.xml";
+    public string ItemDbLocalizationInnerPath  { get; set; } = "data/local/xml/ItemDB.taiwan.txt";
 
     /// <summary>
     /// 已知 salt 清單（共用：所有 IT 解包都依序嘗試）

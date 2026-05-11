@@ -16,7 +16,18 @@ public class MainViewModel : INotifyPropertyChanged
     // ── Services ─────────────────────────────────────
     private readonly LocalizationService _loc  = new();
     private readonly SkillXmlParser      _parser;
+    private readonly WeaponDataService   _weapons = new();
     public  readonly EditSession          Session = new();
+
+    public IReadOnlyList<Weapon> Weapons => _weapons.Weapons;
+    public IReadOnlyDictionary<string, List<Weapon>> WeaponsByTag => _weapons.ByTag;
+
+    private bool _isWeaponDataLoaded;
+    public bool IsWeaponDataLoaded
+    {
+        get => _isWeaponDataLoaded;
+        private set { _isWeaponDataLoaded = value; OnPropertyChanged(); }
+    }
 
     private string _originXmlPath = "";
 
@@ -130,6 +141,7 @@ public class MainViewModel : INotifyPropertyChanged
         List<SkillEntry>  skills    = new();
         List<string>      talentKeys = new();
         ScanResult? scan = null;
+        bool weaponLoadedOk = false;
 
         // ── 重量 I/O 在背景執行緒 ──────────────────────
         bool sourcesChanged = false;
@@ -160,6 +172,42 @@ public class MainViewModel : INotifyPropertyChanged
             (skills, talentKeys) = _parser.Parse(originXmlPath);
             Log.Info($"Parse OK ({parseSw.ElapsedMilliseconds}ms) skills={skills.Count} talentKeys={talentKeys.Count}");
 
+            progress.Report("正在解包武器資料...");
+            try
+            {
+                var (weaponXmlPath, wxSalt) = extractor.Extract(
+                    sources.WeaponIt, sources.WeaponInnerPath, sources.KnownSalts);
+                if (wxSalt != null && HoistSalt(sources.KnownSalts, wxSalt))
+                    sourcesChanged = true;
+
+                var (itemDbXmlPath, idxSalt) = extractor.Extract(
+                    sources.WeaponIt, sources.ItemDbInnerPath, sources.KnownSalts);
+                if (idxSalt != null && HoistSalt(sources.KnownSalts, idxSalt))
+                    sourcesChanged = true;
+
+                var (weaponLocPath, wlSalt) = extractor.Extract(
+                    sources.LocalizationIt, sources.WeaponLocalizationInnerPath, sources.KnownSalts);
+                if (wlSalt != null && HoistSalt(sources.KnownSalts, wlSalt))
+                    sourcesChanged = true;
+
+                var (itemDbLocPath, idlSalt) = extractor.Extract(
+                    sources.LocalizationIt, sources.ItemDbLocalizationInnerPath, sources.KnownSalts);
+                if (idlSalt != null && HoistSalt(sources.KnownSalts, idlSalt))
+                    sourcesChanged = true;
+
+                _weapons.Load(new[]
+                {
+                    new WeaponDataService.Source(weaponXmlPath, weaponLocPath, "xml.itemdb_weapon"),
+                    new WeaponDataService.Source(itemDbXmlPath, itemDbLocPath, "xml.itemdb"),
+                });
+                weaponLoadedOk = true;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"武器資料載入失敗（picker 將 disabled）: {ex.Message}");
+                weaponLoadedOk = false;
+            }
+
             progress.Report("正在掃描內附修改記錄...");
             scan = ScanForEmbeddedDiff(extractor, gameFolder, sources.KnownSalts);
         });
@@ -185,6 +233,8 @@ public class MainViewModel : INotifyPropertyChanged
 
         RefreshGameVersion();
         Log.Info($"GameVersion={(GameVersion?.ToString() ?? "(unknown)")}");
+
+        IsWeaponDataLoaded = weaponLoadedOk;
 
         var skillCount = skills.Count;
         var statusBase = $"已載入 {skillCount} 個技能";

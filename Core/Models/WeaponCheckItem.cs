@@ -5,7 +5,7 @@ namespace MabiSkillEditor.Core.Models;
 
 public class WeaponCheckItem : INotifyPropertyChanged
 {
-    public string Token       { get; }
+    public string Tag         { get; }
     public string DisplayName { get; }
 
     private bool _isChecked;
@@ -15,9 +15,9 @@ public class WeaponCheckItem : INotifyPropertyChanged
         set { _isChecked = value; OnPropertyChanged(); }
     }
 
-    public WeaponCheckItem(string token, string displayName)
+    public WeaponCheckItem(string tag, string displayName)
     {
-        Token       = token;
+        Tag         = tag;
         DisplayName = displayName;
     }
 
