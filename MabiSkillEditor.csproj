@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Content Include="sources.json"    CopyToOutputDirectory="PreserveNewest"/>
+    <Content Include="presets.json"    CopyToOutputDirectory="PreserveNewest"/>
     <Content Include="mabi-pack2.exe"  CopyToOutputDirectory="PreserveNewest"/>
     <Resource Include="app.ico"/>
   </ItemGroup>

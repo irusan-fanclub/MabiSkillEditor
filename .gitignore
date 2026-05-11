@@ -7,6 +7,8 @@ publish/
 origin/
 output/
 config.json
+log.txt
+log.txt.old
 
 # VS / Rider
 .vs/

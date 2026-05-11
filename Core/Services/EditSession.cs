@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using MabiSkillEditor.Core.Models;
 
 namespace MabiSkillEditor.Core.Services;
@@ -50,28 +53,42 @@ public class EditSession
     public IReadOnlyList<SkillEdit> AllEdits =>
         _edits.Values.Where(e => e.HasChanges).ToList();
 
-    // ── 輸出 diff.txt ─────────────────────────────────
+    // ── 輸出 diff.json ────────────────────────────────
 
-    public void WriteDiff(string path, IEnumerable<SkillXmlParser.DiffEntry> diffs)
+    private static readonly JsonSerializerOptions _diffJsonOpts = new()
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("MabiSkillEditor - 修改記錄");
-        sb.AppendLine(new string('=', 50));
+        WriteIndented = true,
+        Encoder       = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
+
+    public void WriteDiff(
+        string path,
+        IEnumerable<SkillXmlParser.DiffEntry> diffs,
+        string appVersion,
+        int?   gameVersion)
+    {
+        var doc = new DiffFile
+        {
+            AppVersion  = appVersion,
+            GameVersion = gameVersion,
+            ExportedAt  = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+        };
 
         foreach (var entry in diffs)
         {
-            var skill = entry.Skill;
-            sb.AppendLine();
-            sb.AppendLine($"[{skill.SkillID}] {skill.DisplayName} ({skill.EngName})");
-            foreach (var line in entry.Lines)
+            var skillDoc = new DiffSkill
             {
-                var oldDisplay = string.IsNullOrEmpty(line.OldVal) ? "（無）" : line.OldVal;
-                var newDisplay = string.IsNullOrEmpty(line.NewVal) ? "（刪除）" : line.NewVal;
-                sb.AppendLine($"  {line.Field}: {oldDisplay} → {newDisplay}");
-            }
+                SkillID = entry.Skill.SkillID,
+                Name    = entry.Skill.DisplayName,
+                EngName = entry.Skill.EngName,
+            };
+            foreach (var line in entry.Lines)
+                skillDoc.Changes[line.Field] = new DiffChange { Old = line.OldVal, New = line.NewVal };
+            doc.Skills.Add(skillDoc);
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
+        var json = JsonSerializer.Serialize(doc, _diffJsonOpts);
+        File.WriteAllText(path, json, new UTF8Encoding(false));
     }
 }

@@ -22,22 +22,22 @@ public partial class MainWindow : Window
     // ── 武器 token 清單（不含持握方式 righthand/twohand，那兩個移到 Radio）──
     private static readonly List<WeaponCheckItem> WeaponCatalog = new()
     {
-        new("/staff/",              "魔杖"),
-        new("/wand/",               "單手杖"),
+        new("/staff/",              "長杖"),
+        new("/wand/",               "短杖"),
         new("/bow/",                "弓"),
         new("/crossbow/",           "弩"),
         new("/blade/",              "單手劍"),
         new("/blunt/",              "鈍器"),
-        new("/axe/",                "斧"),
-        new("/lance/",              "槍"),
+        new("/axe/",                "斧頭"),
+        new("/lance/",              "長槍"),
         new("/knuckle/",            "拳套"),
         new("/chainblade/",         "鏈刃"),
         new("/scythe/",             "大鐮刀"),
         new("/magical_scythe/",     "魔法大鐮刀"),
         new("/dualgun/",            "雙槍"),
-        new("/cylinder_repairable/","彈夾"),
-        new("/atlatl/",             "投槍器"),
-        new("/fynnbell/",           "芬貝爾"),
+        new("/cylinder_repairable/","鋼瓶"),
+        new("/atlatl/",             "擲矛器"),
+        new("/fynnbell/",           "芬恩鈴鐺"),
         new("/shuriken/",           "手裏劍"),
         new("/handle/",             "把手"),
         new("/weapontype_combat/",  "近戰武器"),
@@ -63,9 +63,8 @@ public partial class MainWindow : Window
         TxtItName.Text     = _vm.OutputItName;
         TxtStatus.Text     = _vm.Status;
 
-        // Titlebar 版本字串（讀組件版本）
-        var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-        if (ver != null) TitleVersion.Text = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
+        // Titlebar 版本字串：app 版本 + 遊戲版本（若可讀到）
+        UpdateTitleVersion();
 
         // Titlebar 雙擊：最大化／還原
         StateChanged += (_, _) =>
@@ -77,10 +76,21 @@ public partial class MainWindow : Window
                 TxtStatus.Text = _vm.Status;
             if (e.PropertyName == nameof(MainViewModel.CurrentEdit))
                 RefreshEditForm();
+            if (e.PropertyName == nameof(MainViewModel.GameVersion))
+                UpdateTitleVersion();
+            if (e.PropertyName == nameof(MainViewModel.OutputItName))
+                TxtItName.Text = _vm.OutputItName;
         };
 
         SkillGrid.ItemsSource    = _vm.DisplayedSkills;
         ModifiedGrid.ItemsSource = _vm.ModifiedSkills;
+        PresetList.ItemsSource   = _vm.Presets;
+    }
+
+    private void BtnApplyPreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is PresetViewModel pvm)
+            _vm.ApplyPreset(pvm);
     }
 
     // ── Titlebar 視窗按鈕 ────────────────────────────
@@ -94,6 +104,15 @@ public partial class MainWindow : Window
             : WindowState.Maximized;
 
     private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void UpdateTitleVersion()
+    {
+        var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        var app = ver != null ? $"v{ver.Major}.{ver.Minor}.{ver.Build}" : "";
+        TitleVersion.Text = _vm.GameVersion is int gv
+            ? $"{app}  ·  Mabinogi v{gv}"
+            : app;
+    }
 
     // ── 工具列 ───────────────────────────────────────
 
@@ -125,6 +144,10 @@ public partial class MainWindow : Window
         catch (Exception ex)
         { WinMsgBox.Show(ex.Message, "載入失敗", MessageBoxButton.OK, MessageBoxImage.Error); }
         finally { HideOverlay(); }
+
+        if (!string.IsNullOrEmpty(_vm.LoadWarning))
+            WinMsgBox.Show(_vm.LoadWarning, "技能修改 .it 衝突",
+                           MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
     private async void BtnExport_Click(object sender, RoutedEventArgs e)
@@ -152,8 +175,8 @@ public partial class MainWindow : Window
     {
         using var dlg = new WinForms.OpenFileDialog
         {
-            Title  = "選擇修改記錄（diff.txt）",
-            Filter = "文字檔 (*.txt)|*.txt|所有檔案 (*.*)|*.*",
+            Title  = "選擇修改記錄（diff.json / diff.txt）",
+            Filter = "修改記錄 (*.json;*.txt)|*.json;*.txt|JSON (*.json)|*.json|文字檔 (*.txt)|*.txt|所有檔案 (*.*)|*.*",
         };
         if (dlg.ShowDialog() != WinForms.DialogResult.OK) return;
         try

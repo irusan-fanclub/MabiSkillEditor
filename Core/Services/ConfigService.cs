@@ -89,4 +89,21 @@ public static class ConfigService
 
     public static string MabiPackPath =>
         Path.Combine(AppDir, "mabi-pack2.exe");
+
+    public static string PresetsPath =>
+        Path.Combine(AppDir, "presets.json");
+
+    /// <summary>讀取 GameFolder/version.dat（4 bytes little-endian uint32）。讀不到回 null。</summary>
+    public static int? ReadGameVersion(string gameFolder)
+    {
+        if (string.IsNullOrWhiteSpace(gameFolder)) return null;
+        var p = Path.Combine(gameFolder, "version.dat");
+        try
+        {
+            var b = File.ReadAllBytes(p);
+            if (b.Length < 4) return null;
+            return (int)System.BitConverter.ToUInt32(b, 0);
+        }
+        catch { return null; }
+    }
 }

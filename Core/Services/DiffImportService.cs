@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using MabiSkillEditor.Core.Models;
 
 namespace MabiSkillEditor.Core.Services;
 
@@ -10,11 +12,30 @@ public static class DiffImportService
 {
     public record SkillChange(int SkillId, string Field, string NewValue);
 
-    /// <summary>
-    /// 解析 EditSession.WriteDiff() 產生的 diff.txt，
-    /// 回傳每筆欄位變更。
-    /// </summary>
+    /// <summary>依副檔名分派：.json → ParseJson；其他 → 舊版 .txt 解析。</summary>
     public static List<SkillChange> Parse(string diffPath)
+    {
+        var ext = Path.GetExtension(diffPath);
+        return string.Equals(ext, ".json", StringComparison.OrdinalIgnoreCase)
+            ? ParseJson(diffPath)
+            : ParseLegacyTxt(diffPath);
+    }
+
+    public static List<SkillChange> ParseJson(string path)
+    {
+        var json   = File.ReadAllText(path, Encoding.UTF8);
+        var doc    = JsonSerializer.Deserialize<DiffFile>(json) ?? new DiffFile();
+        var result = new List<SkillChange>();
+        foreach (var skill in doc.Skills)
+            foreach (var kv in skill.Changes)
+                result.Add(new SkillChange(skill.SkillID, kv.Key, kv.Value.New));
+        return result;
+    }
+
+    /// <summary>
+    /// 解析 v0.1.x 舊版 diff.txt（純文字格式）。
+    /// </summary>
+    public static List<SkillChange> ParseLegacyTxt(string diffPath)
     {
         var result = new List<SkillChange>();
         var lines  = File.ReadAllLines(diffPath, Encoding.UTF8);

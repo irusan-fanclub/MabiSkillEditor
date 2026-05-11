@@ -1,0 +1,28 @@
+{
+  "Presets": [
+    {
+      "Name": "治癒使用治癒魔杖",
+      "SkillID": 30006,
+      "WeaponStringID": "/healing_wand/",
+      "TargetPreference": null
+    },
+    {
+      "Name": "光之覺醒使用布里歐納克",
+      "SkillID": 45001,
+      "WeaponStringID": "/Brionac/",
+      "TargetPreference": null
+    },
+    {
+      "Name": "猛擊使用貓武/靈魂武器",
+      "SkillID": 20019,
+      "WeaponStringID": "/ntd_weapon/ | /muri_weapon/",
+      "TargetPreference": null
+    },
+    {
+      "Name": "無限斬擊使用布里歐納克",
+      "SkillID": 22004,
+      "WeaponStringID": "/Brionac/",
+      "TargetPreference": null
+    }
+  ]
+}
